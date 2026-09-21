@@ -173,3 +173,22 @@ network.add_edge("Edge 1", "Cloud 1", 2.5)
 
 # Display graph
 network.display()
+# =============================
+# Dijkstra Shortest Paths
+# =============================
+
+shortest_paths = network.dijkstra("UAV 1")
+
+print("\n===== DIJKSTRA SHORTEST PATHS =====")
+
+for node, distance in shortest_paths.items():
+
+    if distance == float("inf"):
+        print(f"UAV 1 -> {node}: Not reachable")
+
+    else:
+        print(
+            f"UAV 1 -> {node}: "
+            f"{distance:.2f} seconds"
+        )
+        
