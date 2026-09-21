@@ -1,11 +1,10 @@
 from models import Task, UAV, EdgeServer, CloudServer
-
 from cost import (
     calculate_uav_cost,
     calculate_edge_cost,
     calculate_cloud_cost
 )
-
+from algorithms.graph import Graph
 # =============================
 # Create UAVs
 # =============================
@@ -158,3 +157,19 @@ for task in tasks:
         f"  {cloud_cost['location']}: "
         f"{cloud_cost['total_delay']:.2f} s"
     )
+
+# =============================
+# Create UAV Network Graph
+# =============================
+
+network = Graph()
+
+# Add communication links
+network.add_edge("UAV 1", "Edge 1", 2.0)
+network.add_edge("UAV 2", "Edge 1", 1.5)
+network.add_edge("UAV 3", "Edge 1", 2.2)
+
+network.add_edge("Edge 1", "Cloud 1", 2.5)
+
+# Display graph
+network.display()
