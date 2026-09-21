@@ -5,6 +5,8 @@ from cost import (
     calculate_cloud_cost
 )
 from algorithms.graph import Graph
+from algorithms.greedy import greedy_offloading
+
 # =============================
 # Create UAVs
 # =============================
@@ -30,6 +32,12 @@ uav3 = UAV(
     bandwidth=12
 )
 
+# Store all UAVs in a list
+uavs = [
+    uav1,
+    uav2,
+    uav3
+]
 
 # =============================
 # Create Servers
@@ -191,4 +199,36 @@ for node, distance in shortest_paths.items():
             f"UAV 1 -> {node}: "
             f"{distance:.2f} seconds"
         )
-        
+
+# =============================
+# Greedy Task Offloading
+# =============================
+
+greedy_results = greedy_offloading(
+    tasks,
+    uavs,
+    edge1,
+    cloud1
+)
+
+print("\n===== GREEDY OFFLOADING RESULTS =====")
+
+total_greedy_delay = 0
+
+for result in greedy_results:
+
+    print(
+        f"Task {result['task_id']} "
+        f"({result['task_type']}) "
+        f"-> {result['location']} "
+        f"| Delay: {result['delay']:.2f} s"
+    )
+
+    if result["delay"] != float("inf"):
+        total_greedy_delay += result["delay"]
+
+
+print(
+    f"\nTotal Greedy Delay: "
+    f"{total_greedy_delay:.2f} seconds"
+)
