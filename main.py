@@ -6,6 +6,7 @@ from cost import (
 )
 from algorithms.graph import Graph
 from algorithms.greedy import greedy_offloading
+from algorithms.scheduling import schedule_tasks
 
 # =============================
 # Create UAVs
@@ -232,3 +233,23 @@ print(
     f"\nTotal Greedy Delay: "
     f"{total_greedy_delay:.2f} seconds"
 )
+# =============================
+# Task Scheduling
+# =============================
+
+scheduled_tasks = schedule_tasks(tasks)
+
+print("\n===== TASK SCHEDULING =====")
+
+for position, task in enumerate(
+    scheduled_tasks,
+    start=1
+):
+
+    print(
+        f"{position}. "
+        f"Task {task.task_id} "
+        f"({task.task_type}) | "
+        f"Priority: {task.priority} | "
+        f"Deadline: {task.deadline}s"
+    )
