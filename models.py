@@ -64,11 +64,33 @@ class EdgeServer:
         self.max_tasks = max_tasks
         self.bandwidth = bandwidth
 
+        # Current resource usage
+        self.used_cpu = 0
+        self.current_tasks = 0
+
+    def has_capacity(self, task):
+        """Check whether Edge can accept a task."""
+
+        if self.current_tasks >= self.max_tasks:
+            return False
+
+        if self.used_cpu + task.cpu_required > self.cpu_capacity:
+            return False
+
+        return True
+
+    def allocate(self, task):
+        """Allocate resources to a task."""
+
+        self.used_cpu += task.cpu_required
+        self.current_tasks += 1
+
     def __str__(self):
         return (
             f"Edge {self.server_id} | "
             f"CPU: {self.cpu_capacity} GHz | "
-            f"Capacity: {self.max_tasks} tasks | "
+            f"Used CPU: {self.used_cpu} GHz | "
+            f"Tasks: {self.current_tasks}/{self.max_tasks} | "
             f"Bandwidth: {self.bandwidth} Mbps"
         )
 
@@ -86,10 +108,32 @@ class CloudServer:
         self.max_tasks = max_tasks
         self.bandwidth = bandwidth
 
+        # Current resource usage
+        self.used_cpu = 0
+        self.current_tasks = 0
+
+    def has_capacity(self, task):
+        """Check whether Cloud can accept a task."""
+
+        if self.current_tasks >= self.max_tasks:
+            return False
+
+        if self.used_cpu + task.cpu_required > self.cpu_capacity:
+            return False
+
+        return True
+
+    def allocate(self, task):
+        """Allocate resources to a task."""
+
+        self.used_cpu += task.cpu_required
+        self.current_tasks += 1
+
     def __str__(self):
         return (
             f"Cloud {self.server_id} | "
             f"CPU: {self.cpu_capacity} GHz | "
-            f"Capacity: {self.max_tasks} tasks | "
+            f"Used CPU: {self.used_cpu} GHz | "
+            f"Tasks: {self.current_tasks}/{self.max_tasks} | "
             f"Bandwidth: {self.bandwidth} Mbps"
         )

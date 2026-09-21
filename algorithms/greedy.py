@@ -11,13 +11,13 @@ from cost import (
 
 def greedy_offloading(tasks, uavs, edge, cloud):
     """
-    Greedy task offloading.
+    Greedy task offloading with resource constraints.
 
     For every task:
-    1. Find its source UAV.
-    2. Calculate cost on UAV, Edge and Cloud.
-    3. Remove infeasible options.
-    4. Select the location with minimum delay.
+    1. Calculate the cost at each location.
+    2. Remove infeasible locations.
+    3. Select the location with minimum delay.
+    4. Update resource usage.
     """
 
     allocations = []
@@ -54,27 +54,35 @@ def greedy_offloading(tasks, uavs, edge, cloud):
             cloud
         )
 
-        options = [
-            uav_cost,
-            edge_cost,
-            cloud_cost
-        ]
-
         # ----------------------------------
-        # Remove infeasible options
+        # Check resource constraints
         # ----------------------------------
 
-        feasible_options = [
-            option
-            for option in options
-            if option["total_delay"] != float("inf")
-        ]
+        options = []
+
+        # UAV
+        if uav_cost["total_delay"] != float("inf"):
+            options.append(uav_cost)
+
+        # Edge
+        if (
+            edge.has_capacity(task)
+            and edge_cost["total_delay"] != float("inf")
+        ):
+            options.append(edge_cost)
+
+        # Cloud
+        if (
+            cloud.has_capacity(task)
+            and cloud_cost["total_delay"] != float("inf")
+        ):
+            options.append(cloud_cost)
 
         # ----------------------------------
-        # Choose minimum-cost option
+        # No feasible location
         # ----------------------------------
 
-        if not feasible_options:
+        if not options:
 
             allocations.append({
                 "task_id": task.task_id,
@@ -85,10 +93,28 @@ def greedy_offloading(tasks, uavs, edge, cloud):
 
             continue
 
+        # ----------------------------------
+        # Greedy selection
+        # ----------------------------------
+
         best_option = min(
-            feasible_options,
+            options,
             key=lambda option: option["total_delay"]
         )
+
+        # ----------------------------------
+        # Update resources
+        # ----------------------------------
+
+        if best_option["location"].startswith("Edge"):
+            edge.allocate(task)
+
+        elif best_option["location"].startswith("Cloud"):
+            cloud.allocate(task)
+
+        # ----------------------------------
+        # Store result
+        # ----------------------------------
 
         allocations.append({
             "task_id": task.task_id,
