@@ -1,5 +1,10 @@
 from models import Task, UAV, EdgeServer, CloudServer
 
+from cost import (
+    calculate_uav_cost,
+    calculate_edge_cost,
+    calculate_cloud_cost
+)
 
 # =============================
 # Create UAVs
@@ -113,3 +118,43 @@ print("\nTasks:")
 
 for task in tasks:
     print(task)
+
+# =============================
+# Calculate Cost and Delay
+# =============================
+
+print("\n===== COST AND DELAY ANALYSIS =====")
+
+for task in tasks:
+
+    # Find the UAV that generated the task
+    if task.uav_id == uav1.uav_id:
+        source_uav = uav1
+
+    elif task.uav_id == uav2.uav_id:
+        source_uav = uav2
+
+    else:
+        source_uav = uav3
+
+    # Calculate costs
+    uav_cost = calculate_uav_cost(task, source_uav)
+    edge_cost = calculate_edge_cost(task, edge1)
+    cloud_cost = calculate_cloud_cost(task, cloud1)
+
+    print(f"\nTask {task.task_id}: {task.task_type}")
+
+    print(
+        f"  {uav_cost['location']}: "
+        f"{uav_cost['total_delay']:.2f} s"
+    )
+
+    print(
+        f"  {edge_cost['location']}: "
+        f"{edge_cost['total_delay']:.2f} s"
+    )
+
+    print(
+        f"  {cloud_cost['location']}: "
+        f"{cloud_cost['total_delay']:.2f} s"
+    )
