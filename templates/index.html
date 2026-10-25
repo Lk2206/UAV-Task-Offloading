@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimal UAV Task Offloading in Edge-Cloud Computing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">🛸</div>
+        <div>
+          <h1 class="app-title">UAV Task Offloading Optimizer</h1>
+          <p class="app-subtitle">Edge–Cloud Simulation & Optimization System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnHealth" class="btn btn-outline-sm" title="Check API Status">Backend: <span id="healthStatus" class="status-indicator online">Online</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    
+    <!-- Top KPI Overview Cards -->
+    <section class="overview-grid">
+      <div class="stat-card">
+        <div class="stat-icon uav-bg">🚁</div>
+        <div class="stat-data">
+          <div class="stat-value" id="statUAVCount">3</div>
+          <div class="stat-label">Originating UAVs</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon task-bg">⚡</div>
+        <div class="stat-data">
+          <div class="stat-value" id="statTaskCount">4</div>
+          <div class="stat-label">Active Tasks</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon edge-bg">🏢</div>
+        <div class="stat-data">
+          <div class="stat-value" id="statEdgeCount">1</div>
+          <div class="stat-label">Edge Servers</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon cloud-bg">☁️</div>
+        <div class="stat-data">
+          <div class="stat-value" id="statCloudCount">1</div>
+          <div class="stat-label">Cloud Data Centers</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Error & Notice Banner -->
+    <div id="alertBanner" class="alert-banner hidden">
+      <div class="alert-content">
+        <span id="alertIcon" class="alert-icon">⚠️</span>
+        <span id="alertMessage">Notification</span>
+      </div>
+      <button id="alertClose" class="alert-close">&times;</button>
+    </div>
+
+    <!-- Main 2-Column Working Area -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Controls & Topology -->
+      <aside class="dashboard-sidebar">
+        
+        <!-- Simulation Parameters Card -->
+        <div class="card config-card">
+          <div class="card-header">
+            <h2>Simulation Setup</h2>
+            <select id="presetSelect" class="form-select select-sm" aria-label="Select Scenario Preset">
+              <option value="benchmark" selected>Preset: Academic Benchmark</option>
+              <option value="edge_congestion">Preset: Edge Congestion</option>
+              <option value="deadline_critical">Preset: Strict Deadlines</option>
+              <option value="dp_optimal_verification">Preset: DP Verifiable Small</option>
+            </select>
+          </div>
+
+          <form id="configForm" class="config-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputNumUAVs">UAVs Count</label>
+                <input type="number" id="inputNumUAVs" min="1" max="8" value="3" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="inputNumTasks">Tasks Count</label>
+                <input type="number" id="inputNumTasks" min="1" max="40" value="4" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputEdgeCpu">Edge CPU (GC/s)</label>
+                <input type="number" id="inputEdgeCpu" step="0.5" min="2" max="50" value="10.0" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="inputCloudCpu">Cloud CPU (GC/s)</label>
+                <input type="number" id="inputCloudCpu" step="5" min="10" max="200" value="50.0" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputSeed">Random Seed</label>
+                <input type="number" id="inputSeed" value="42" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="inputDPStep">DP Discretization Δ</label>
+                <input type="number" id="inputDPStep" step="0.1" min="0.2" max="5" value="1.0" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-check-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="checkBenchmarkWorkload" checked>
+                Use Canonical Benchmark Workload
+              </label>
+            </div>
+
+            <div class="form-buttons">
+              <button type="button" id="btnUpdateWorkload" class="btn btn-secondary">Regenerate Workload</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Algorithm Control Panel Card -->
+        <div class="card action-card">
+          <div class="card-header">
+            <h2>Algorithm Execution</h2>
+          </div>
+          <p class="section-desc">Select an individual optimization strategy or perform a fair side-by-side benchmark:</p>
+          
+          <div class="algo-button-grid">
+            <button id="btnRunGreedy" class="btn btn-algo" data-algo="greedy">
+              <span class="algo-name">Greedy Heuristic</span>
+              <span class="algo-complexity">O(N·(E+C))</span>
+            </button>
+            <button id="btnRunDP" class="btn btn-algo btn-algo-dp" data-algo="dp">
+              <span class="algo-name">Exact DP (MMKP)</span>
+              <span class="algo-complexity">Optimal • Pseudo-poly</span>
+            </button>
+            <button id="btnRunEDF" class="btn btn-algo" data-algo="edf">
+              <span class="algo-name">EDF Scheduling</span>
+              <span class="algo-complexity">O(N log N) • Timeline</span>
+            </button>
+            <button id="btnRunPriority" class="btn btn-algo" data-algo="priority">
+              <span class="algo-name">Priority Scheduling</span>
+              <span class="algo-complexity">O(N log N) • Criticality</span>
+            </button>
+            <button id="btnRunCombined" class="btn btn-algo" data-algo="combined">
+              <span class="algo-name">Combined Sched.</span>
+              <span class="algo-complexity">Priority + EDF</span>
+            </button>
+          </div>
+
+          <div class="compare-action">
+            <button id="btnCompareAll" class="btn btn-primary btn-compare">
+              ⚡ Compare All Algorithms on Identical Workload
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulated Network Topology Card -->
+        <div class="card network-card">
+          <div class="card-header">
+            <h2>Network Topology & Dijkstra Routes</h2>
+            <span class="badge badge-info">Simulated Latency</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="networkCanvas" width="480" height="260"></canvas>
+          </div>
+          <div class="network-legend">
+            <span><span class="dot dot-uav"></span> UAV Nodes</span>
+            <span><span class="dot dot-edge"></span> Edge Server</span>
+            <span><span class="dot dot-cloud"></span> Cloud Data Center</span>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Right Column: Results, Tables & Charts -->
+      <section class="dashboard-content">
+
+        <!-- Active Run Results Summary Card -->
+        <div class="card results-card">
+          <div class="card-header">
+            <div>
+              <span class="results-subheading">Active Algorithm Evaluation:</span>
+              <h2 id="activeAlgorithmTitle">Greedy Heuristic</h2>
+            </div>
+            <div id="optimalityBadge" class="badge badge-warning">Local Optimum</div>
+          </div>
+
+          <!-- Dynamic Key Metrics Row -->
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-label">Total Completion Delay</div>
+              <div class="metric-value text-accent" id="metricTotalDelay">-- s</div>
+              <div class="metric-sub" id="metricMeanDelay">Mean: -- s</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Tasks Completed / Unallocated</div>
+              <div class="metric-value" id="metricTasksSummary">-- / --</div>
+              <div class="metric-sub" id="metricOnTime">On-Time: --</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Deadline Violations</div>
+              <div class="metric-value text-danger" id="metricDeadlineMisses">--</div>
+              <div class="metric-sub" id="metricMakespan">Makespan: -- s</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Server CPU Utilization</div>
+              <div class="metric-value text-info" id="metricServerUtil">E: --% | C: --%</div>
+              <div class="metric-sub" id="metricUavUtil">UAV CPU: --%</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Algorithm Runtime</div>
+              <div class="metric-value text-success" id="metricExecTime">-- ms</div>
+              <div class="metric-sub" id="metricStates">DP States: --</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">UAV Energy Consumed</div>
+              <div class="metric-value text-warning" id="metricEnergy">-- J</div>
+              <div class="metric-sub">Compute + Tx RF</div>
+            </div>
+          </div>
+
+          <!-- Task Allocation Table -->
+          <div class="table-section">
+            <div class="table-header-group">
+              <h3>Task Offloading Allocations</h3>
+              <span id="allocationCountBadge" class="badge badge-neutral">0 Tasks</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="allocationTable">
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Origin</th>
+                    <th>Type</th>
+                    <th>Assigned Location</th>
+                    <th>Tx Delay</th>
+                    <th>Net Latency</th>
+                    <th>Proc Delay</th>
+                    <th>Total Response</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="allocationTableBody">
+                  <tr>
+                    <td colspan="10" class="empty-state">No simulation executed yet. Click an algorithm above to run.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Comparative Charts Section (visible on Compare All) -->
+        <div class="card charts-card" id="chartsSection">
+          <div class="card-header">
+            <h2>Algorithm Benchmark Comparisons</h2>
+            <span class="badge badge-info">Identical Workload</span>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-wrapper">
+              <h4>Total Delay & Makespan (seconds - lower is better)</h4>
+              <div class="chart-canvas-container">
+                <canvas id="chartDelay"></canvas>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <h4>Algorithm Execution Time (ms - lower is better)</h4>
+              <div class="chart-canvas-container">
+                <canvas id="chartRuntime"></canvas>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <h4>Deadline Satisfaction & Task Admittance</h4>
+              <div class="chart-canvas-container">
+                <canvas id="chartDeadlines"></canvas>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <h4>Edge & Cloud CPU Utilization (%)</h4>
+              <div class="chart-canvas-container">
+                <canvas id="chartUtilization"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>Optimal UAV Task Offloading in Edge-Cloud Computing</p>
+      <p class="footer-sub">Deterministic Simulation Engine • Exact Multidimensional Knapsack DP • Dijkstra Min-Heap Routing</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
